@@ -60,10 +60,12 @@ COPY spack/test/ $SPACK_ROOT/var/spack/repos/builtin/packages/octopus/test
 RUN ls -l $SPACK_ROOT/var/spack/repos/builtin/packages/octopus/test
 
 # display specs of upcoming spack installation
-RUN . $SPACK_ROOT/share/spack/setup-env.sh && spack spec octopus +netcdf+parmetis+arpack+cgal+pfft+python+likwid+libyaml+elpa+nlopt
+# RUN . $SPACK_ROOT/share/spack/setup-env.sh && spack spec octopus +mpi+netcdf+parmetis+arpack+cgal+pfft+python+likwid+libyaml+elpa+nlopt # mpi version
+RUN . $SPACK_ROOT/share/spack/setup-env.sh && spack spec octopus +netcdf+arpack+cgal+python+likwid+libyaml+nlopt+check_short
 
 # run the spack installation
-RUN . $SPACK_ROOT/share/spack/setup-env.sh && spack install octopus +netcdf+parmetis+arpack+cgal+pfft+python+likwid+libyaml+elpa+nlopt
+# RUN . $SPACK_ROOT/share/spack/setup-env.sh && spack install octopus +mpi+netcdf+parmetis+arpack+cgal+pfft+python+likwid+libyaml+elpa+nlopt # mpi version
+RUN . $SPACK_ROOT/share/spack/setup-env.sh && spack install octopus +netcdf+parmetis+arpack+cgal+python+likwid+libyaml+nlopt+check_short
 
 # run spack smoke tests for octopus. We get an error if any of the fail.
 RUN . $SPACK_ROOT/share/spack/setup-env.sh && spack test run --alias testname octopus

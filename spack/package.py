@@ -66,6 +66,8 @@ class Octopus(Package, CudaPackage):
             description='Compile with nlopt')
     variant('debug', default=False,
             description='Compile with debug flags')
+    variant('check_short', default=False,
+            description='Run short tests')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
@@ -80,23 +82,35 @@ class Octopus(Package, CudaPackage):
     depends_on('libxc@2:4', when='@8:9')
     depends_on('libxc@5.1.0:', when='@10:')
     depends_on('libxc@5.1.0:', when='@develop')
-    depends_on('mpi')
+    depends_on('mpi', when='+mpi')
     depends_on('fftw@3:+mpi+openmp', when='@8:9')
     depends_on('fftw-api@3:+mpi+openmp', when='@10:')
     depends_on('py-numpy', when='+python')
     depends_on('py-mpi4py', when='+python')
-    depends_on('metis@5:+int64', when='+metis')
-    depends_on('parmetis+int64', when='+parmetis')
+    
+    
     depends_on('scalapack', when='+scalapack')
     depends_on('netcdf-fortran', when='+netcdf')
     depends_on('arpack-ng', when='+arpack')
     depends_on('cgal', when='+cgal')
-    depends_on('pfft', when='+pfft')
+    
     depends_on('likwid', when='+likwid')
     depends_on('libvdwxc', when='+libvdwxc')
     depends_on('libyaml', when='+libyaml')
-    depends_on('elpa', when='+elpa')
+    
     depends_on('nlopt', when='+nlopt')
+    if('+mpi' in spec):
+        #list all the parallel dependencies
+        depends_on('elpa', when='+elpa')
+        depends_on('libvdwxc', when='+libvdwxc')
+        depends_on('parmetis+int64', when='+parmetis')
+        depends_on('pfft', when='+pfft')
+    else:
+        #list all the serial dependencies
+        depends_on('libvdwxc~mpi', when='+libvdwxc')
+        depends_on('metis@5:+int64', when='+metis')
+        
+
 
     # optional dependencies:
     # TODO: etsf-io, sparskit,
@@ -246,7 +260,8 @@ class Octopus(Package, CudaPackage):
         configure(*args)
         make()
         # short tests take forever...
-        # make('check-short')
+        if '+check_short' in spec:
+            make('check-short')
         make('install')
 
     @run_after('install')
