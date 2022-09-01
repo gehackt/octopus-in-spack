@@ -99,16 +99,16 @@ class Octopus(Package, CudaPackage):
     depends_on('libyaml', when='+libyaml')
     
     depends_on('nlopt', when='+nlopt')
-    if('+mpi' in spec):
+    # if '+mpi' in spec:
         #list all the parallel dependencies
-        depends_on('elpa', when='+elpa')
-        depends_on('libvdwxc', when='+libvdwxc')
-        depends_on('parmetis+int64', when='+parmetis')
-        depends_on('pfft', when='+pfft')
-    else:
+    depends_on('elpa', when='+elpa+mpi')
+    depends_on('libvdwxc+mpi', when='+libvdwxc+mpi')
+    depends_on('parmetis+int64', when='+parmetis')
+    depends_on('pfft', when='+pfft')
+    # else:
         #list all the serial dependencies
-        depends_on('libvdwxc~mpi', when='+libvdwxc')
-        depends_on('metis@5:+int64', when='+metis')
+    depends_on('libvdwxc~mpi', when='+libvdwxc~mpi')
+    depends_on('metis@5:+int64', when='+metis')
         
 
 
