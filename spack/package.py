@@ -37,12 +37,50 @@ class Octopus(AutotoolsPackage, CudaPackage):
     #variants
     variant('mpi', default=True, description='Build with MPI support')
 
-    #dependencies
+    #dependencies Picked from https://octopus-code.org/wiki/Manual:Installation and existing spack package
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
     depends_on("mpi",when="+mpi")
+     
+    depends_on('libxc@2:2', when='@:5') # The library of exchange and correlation functionals.
+    depends_on('libxc@2:3', when='@6:7')
+    depends_on('libxc@2:4', when='@8:9')
+    depends_on('libxc@5.1.0:', when='@10:')
+    depends_on('libxc@5.1.0:', when='@develop')
+
+    depends_on('fftw@3:+mpi+openmp', when='@8:9')  # FFT library
+    depends_on('fftw-api@3:+mpi+openmp', when='@10:')
+
+    depends_on('blas')
+    depends_on('gsl@1.9:')
+    depends_on('lapack')
+
+    depends_on('py-numpy', when='+python')
+    depends_on('py-mpi4py', when='+python')    
+    depends_on('scalapack', when='+scalapack')
+    depends_on('netcdf-fortran', when='+netcdf')
+    depends_on('arpack-ng', when='+arpack')
+    depends_on('cgal', when='+cgal')    
+    depends_on('likwid', when='+likwid')
+    depends_on('libvdwxc', when='+libvdwxc')
+    depends_on('libyaml', when='+libyaml')    
+    depends_on('nlopt', when='+nlopt')
+    # if '+mpi' in spec:
+        #list all the parallel dependencies
+    depends_on('elpa', when='+elpa+mpi')
+    depends_on('libvdwxc+mpi', when='+libvdwxc+mpi')
+    depends_on('parmetis+int64', when='+parmetis')
+    depends_on('pfft', when='+pfft')
+    # else:
+        #list all the serial dependencies
+    depends_on('libvdwxc~mpi', when='+libvdwxc~mpi')
+    depends_on('metis@5:+int64', when='+metis')
+
+    # optional dependencies:
+    # TODO: etsf-io, sparskit,
+    # feast, libfm, pfft, isf, pnfft, poke
 
     def autoreconf(self, spec, prefix):
 
@@ -73,4 +111,222 @@ class Octopus(AutotoolsPackage, CudaPackage):
                 'FC=%s' % self.compiler.fc,
                 ])
 
+        if '^fftw' in spec:
+            args.append(
+                '--with-fftw-prefix=%s' % spec['fftw'].prefix
+            )
+        elif '^mkl' in spec:
+            # As of version 10.0, Octopus depends on fftw-api instead
+            # of FFTW. If FFTW is not in the dependency tree, then
+            # it ought to be MKL as it is currently the only providers
+            # available for fftw-api.
+            args.append(
+                'FCFLAGS_FFTW=-I%s' % spec['mkl'].prefix.include.fftw
+            )
+        else:
+            # To be foolproof, fail with a proper error message
+            # if neither FFTW nor MKL are in the dependency tree.
+            tty.die('Unsupported "fftw-api" provider, '
+                    'currently only FFTW and MKL are supported.\n'
+                    "Please report this issue on Spack's repository.")
+        if '+metis' in spec:
+            args.append(
+                '--with-metis-prefix=%s' % spec['metis'].prefix
+            )
+        if '+parmetis' in spec:
+            args.append(
+                '--with-parmetis-prefix=%s' % spec['parmetis'].prefix
+            )
+        if '+netcdf' in spec:
+            args.extend([
+                '--with-netcdf-prefix=%s' % spec['netcdf-fortran'].prefix,
+                '--with-netcdf-include=%s' %
+                spec['netcdf-fortran'].prefix.include,
+            ])
+        if '+arpack' in spec:
+            arpack_libs = spec['arpack-ng'].libs.joined()
+            args.append(
+                '--with-arpack={0}'.format(arpack_libs),
+            )
+            if '+mpi' in spec['arpack-ng']:
+                args.append(
+                    '--with-parpack={0}'.format(arpack_libs)
+                )
+
+        if '+scalapack' in spec:
+            args.extend([
+                '--with-blacs=%s' % spec['scalapack'].libs,
+                '--with-scalapack=%s' % spec['scalapack'].libs
+            ])
+
+        if '+cgal' in spec:
+            args.append(
+                '--with-cgal-prefix=%s' % spec['cgal'].prefix
+            )
+
+        if '+likwid' in spec:
+            args.append(
+                '--with-likwid-prefix=%s' % spec['likwid'].prefix
+            )
+
+        if '+pfft' in spec:
+            args.append(
+                '--with-pfft-prefix=%s' % spec['pfft'].prefix,
+            )
+
+        # if '+poke' in spec:
+        #     args.extend([
+        #         '--with-poke-prefix=%s' % spec['poke'].prefix,
+        #     ])
+
+        if '+libvdwxc' in spec:
+            args.append(
+                '--with-libvdwxc-prefix=%s' % spec['libvdwxc'].prefix
+            )
+
+        if '+libyaml' in spec:
+            args.append(
+                '--with-libyaml-prefix=%s' % spec['libyaml'].prefix
+            )
+
+        if '+elpa' in spec:
+            args.append(
+                '--with-elpa-prefix=%s' % spec['elpa'].prefix
+            )
+
+        if '+nlopt' in spec:
+            args.append(
+                '--with-nlopt-prefix=%s' % spec['nlopt'].prefix
+            )
+
+        if '+cuda' in spec:
+            args.append(
+                '--enable-cuda'
+            )
+
+        if '+python' in spec:
+            args.append('--enable-python')
+
+        # --with-etsf-io-prefix=
+        # --with-sparskit=${prefix}/lib/libskit.a
+        # --with-pfft-prefix=${prefix} --with-mpifftw-prefix=${prefix}
+        # --with-berkeleygw-prefix=${prefix}
+
+        # When preprocessor expands macros (i.e. CFLAGS) defined as quoted
+        # strings the result may be > 132 chars and is terminated.
+        # This will look to a compiler as an Unterminated character constant
+        # and produce Line truncated errors. To overcome this, add flags to
+        # let compiler know that the entire line is meaningful.
+        # TODO: For the lack of better approach, assume that clang is mixed
+        # with GNU fortran.
+        if (spec.satisfies('%apple-clang') or
+                spec.satisfies('%clang') or
+                spec.satisfies('%gcc')):
+            # In case of GCC version 10, we will have errors because of
+            # argument mismatching. Need to provide a flag to turn this into a
+            # warning and build sucessfully
+
+            fcflags = 'FCFLAGS=-O2 -ffree-line-length-none'
+            fflags = 'FFLAGS=O2 -ffree-line-length-none'
+            if (spec.satisfies('%gcc@10:')):
+                gcc10_extra = '-fallow-argument-mismatch -fallow-invalid-boz'
+                args.append(fcflags + ' ' + gcc10_extra)
+                args.append(fflags + ' ' + gcc10_extra)
+            else:
+                args.append(fcflags)
+                args.append(fflags)
+
         return args
+
+
+
+
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def smoke_tests_after_install(self):
+        """Function stub to run tests after install if desired
+        (for example through `spack install --test=root octopus`)
+        """
+        self.smoke_tests()
+
+    def test(self):
+        """Entry point for smoke tests run through `spack test run octopus`.
+        """
+        self.smoke_tests()
+
+    def smoke_tests(self):
+        """Actual smoke tests for Octopus."""
+        #
+        # run "octopus --version"
+        #
+        exe = join_path(self.spec.prefix.bin, "octopus")
+        options = ["--version"]
+        purpose = "Check octopus can execute (--version)"
+        # Example output:
+        #
+        # spack-v0.17.2$ octopus --version
+        # octopus 11.3 (git commit )
+        expected = ["octopus "]
+
+        self.run_test(
+            exe,
+            options=options,
+            expected=expected,
+            status=[0],
+            installed=False,
+            purpose=purpose,
+            skip_missing=False)
+
+        # Octopus expects a file with name `inp` in the current working
+        # directory to read configuration information for a simulation run from
+        # that file. We copy the relevant configuration file in a dedicated
+        # subfolder for each test.
+        #
+        # As we like to be able to run these tests also with the
+        # `spack install --test=root` command, we cannot rely on
+        # self.test_suite.current_test_data_dir, and need to copy the test
+        # input files manually (see below).
+
+        #
+        # run recipe example
+        #
+
+        expected = ["Running octopus", "CalculationMode = recipe",
+                    "DISCLAIMER: The authors do not "
+                    "guarantee that the implementation",
+                    'recipe leads to an edible dish, '
+                    'for it is clearly "system-dependent".',
+                    "Calculation ended on"]
+        options = []
+        purpose = "Run Octopus recipe example"
+        with working_dir("example-recipe", create=True):
+            print("Current working directory (in example-recipe)")
+            copy(join_path(os.path.dirname(__file__), "test", "recipe.inp"), "inp")
+            self.run_test(exe,
+                          options=options,
+                          expected=expected,
+                          status=[0],
+                          installed=False,
+                          purpose=purpose,
+                          skip_missing=False)
+
+        #
+        # run He example
+        #
+        expected = ["Running octopus", "Info: Starting calculation mode.",
+                    "CalculationMode = gs",
+                    '''Species "helium" is a user-defined potential.''',
+                    "Info: Writing states.", "Calculation ended on"]
+        options = []
+        purpose = "Run tiny calculation for He"
+        with working_dir("example-he", create=True):
+            print("Current working directory (in example-he)")
+            copy(join_path(os.path.dirname(__file__), "test", "he.inp"), "inp")
+            self.run_test(exe,
+                          options=options,
+                          expected=expected,
+                          status=[0],
+                          installed=False,
+                          purpose=purpose,
+                          skip_missing=False)
