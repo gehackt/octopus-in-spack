@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import os 
+import os
 import llnl.util.tty as tty
 from spack.package import *
 
@@ -14,37 +14,82 @@ class Octopus(AutotoolsPackage, CudaPackage):
     theory code."""
 
     homepage = "https://octopus-code.org/"
-    url = "https://gitlab.com/octopus-code/octopus/-/archive/11.3/octopus-11.3.tar.gz"
-    git      = "https://gitlab.com/octopus-code/octopus"
-    
+    urls = ["https://gitlab.com/octopus-code/octopus/-/archive/11.3/octopus-11.3.tar.gz",
+            "https://octopus-code.org/down.php?file=11.3/octopus-11.3.tar.gz"]
+    git = "https://gitlab.com/octopus-code/octopus"
 
     maintainers = ['fangohr', 'RemiLacroix-IDRIS']
 
-    #Versions and their hashes
-    version('11.4', sha256='73bb872bff8165ddd8efc5b891f767cb3fe575b5a4b518416c834450a4492da7')
-    version('11.3', sha256='0c98417071b5e38ba6cbdd409adf917837c387a010e321c0a7f94d9bd9478930')
-    version('11.1',  sha256='d943cc2419ca409dda7459b7622987029f2af89984d0d5f39a6b464c3fc266da')
-    version('10.5',  sha256='deb92e3491b0c6ac5736960d075b44cab466f528b69715ed44968ecfe2953ec4')
-    version('10.4',  sha256='4de9dc6f5815a45e43320e4abc7ef3e501e34bc327441376ea20ca1a992bdb72')
-    version('10.3',  sha256='4633490e21593b51b60a8391b8aa0ed17fa52a3a0030630de123b67a41f88b33')
-    version('10.2',  sha256='393e2ba7b18af1b736ad6deb339ba0cef18c6417671da7a6f1fcc3a5d8f7586b')
-    version('10.1',  sha256='b6a660a99ed593c1d491e2d11cfff9ce87f0d80d527d9ff47fd983533d45adc6')
-    version('10.0',  sha256='ccf62200e3f37911bfff6d127ebe74220996e9c09383a10b1420c81d931dcf23')
-    version('7.3',   sha256='ad843d49d4beeed63e8b9a2ca6bfb2f4c5a421f13a4f66dc7b02f6d6a5c4d742')
-    version('6.0',   sha256='4a802ee86c1e06846aa7fa317bd2216c6170871632c9e03d020d7970a08a8198')
-    version('5.0.1', sha256='3423049729e03f25512b1b315d9d62691cd0a6bd2722c7373a61d51bfbee14e0')
+    # Versions and their hashes
+    version(
+        '11.4', sha256='73bb872bff8165ddd8efc5b891f767cb3fe575b5a4b518416c834450a4492da7')
+    version(
+        '11.3', sha256='0c98417071b5e38ba6cbdd409adf917837c387a010e321c0a7f94d9bd9478930')
+    version(
+        '11.1',  sha256='d943cc2419ca409dda7459b7622987029f2af89984d0d5f39a6b464c3fc266da')
+    version(
+        '10.5',  sha256='deb92e3491b0c6ac5736960d075b44cab466f528b69715ed44968ecfe2953ec4')
+    version(
+        '10.4',  sha256='4de9dc6f5815a45e43320e4abc7ef3e501e34bc327441376ea20ca1a992bdb72')
+    version(
+        '10.3',  sha256='4633490e21593b51b60a8391b8aa0ed17fa52a3a0030630de123b67a41f88b33')
+    version(
+        '10.2',  sha256='393e2ba7b18af1b736ad6deb339ba0cef18c6417671da7a6f1fcc3a5d8f7586b')
+    version(
+        '10.1',  sha256='b6a660a99ed593c1d491e2d11cfff9ce87f0d80d527d9ff47fd983533d45adc6')
+    version(
+        '10.0',  sha256='ccf62200e3f37911bfff6d127ebe74220996e9c09383a10b1420c81d931dcf23')
+    version(
+        '7.3',   sha256='ad843d49d4beeed63e8b9a2ca6bfb2f4c5a421f13a4f66dc7b02f6d6a5c4d742')
+    version(
+        '6.0',   sha256='4a802ee86c1e06846aa7fa317bd2216c6170871632c9e03d020d7970a08a8198')
+    version(
+        '5.0.1', sha256='3423049729e03f25512b1b315d9d62691cd0a6bd2722c7373a61d51bfbee14e0')
 
-    #variants
-    variant('mpi', default=True, description='Build with MPI support')
+    # variants
+    variant('mpi', default=False,
+            description='Build with MPI support')
+    variant('scalapack', default=False,
+            description='Compile with Scalapack')
+    variant('metis', default=False,
+            description='Compile with METIS')
+    variant('parmetis', default=False,
+            description='Compile with ParMETIS')
+    variant('netcdf', default=False,
+            description='Compile with Netcdf')
+    variant('arpack', default=False,
+            description='Compile with ARPACK')
+    variant('cgal', default=False,
+            description='Compile with CGAL library support')
+    variant('pfft', default=False,
+            description='Compile with PFFT')
+    # poke here refers to https://gitlab.e-cam2020.eu/esl/poke
+    # variant('poke', default=False,
+    #         description='Compile with poke (not available in spack yet)')
+    variant('python', default=False,
+            description='Activates Python support')
+    variant('likwid', default=False,
+            description='Compile with likwid')
+    variant('libvdwxc', default=False,
+            description='Compile with libvdwxc')
+    variant('libyaml', default=False,
+            description='Compile with libyaml')
+    variant('elpa', default=False,
+            description='Compile with ELPA')
+    variant('nlopt', default=False,
+            description='Compile with nlopt')
+    variant('debug', default=False,
+            description='Compile with debug flags')
 
-    #dependencies Picked from https://octopus-code.org/wiki/Manual:Installation and existing spack package
+    # dependencies Picked from https://octopus-code.org/wiki/Manual:Installation and existing spack package
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
-    depends_on("mpi",when="+mpi")
-     
-    depends_on('libxc@2:2', when='@:5') # The library of exchange and correlation functionals.
+    depends_on("mpi", when="+mpi")
+
+    # The library of exchange and correlation functionals.
+    depends_on('libxc@2:2', when='@:5')
     depends_on('libxc@2:3', when='@6:7')
     depends_on('libxc@2:4', when='@8:9')
     depends_on('libxc@5.1.0:', when='@10:')
@@ -58,23 +103,23 @@ class Octopus(AutotoolsPackage, CudaPackage):
     depends_on('lapack')
 
     depends_on('py-numpy', when='+python')
-    depends_on('py-mpi4py', when='+python')    
+    depends_on('py-mpi4py', when='+python')
     depends_on('scalapack', when='+scalapack')
     depends_on('netcdf-fortran', when='+netcdf')
     depends_on('arpack-ng', when='+arpack')
-    depends_on('cgal', when='+cgal')    
+    depends_on('cgal', when='+cgal')
     depends_on('likwid', when='+likwid')
     depends_on('libvdwxc', when='+libvdwxc')
-    depends_on('libyaml', when='+libyaml')    
+    depends_on('libyaml', when='+libyaml')
     depends_on('nlopt', when='+nlopt')
     # if '+mpi' in spec:
-        #list all the parallel dependencies
+    # list all the parallel dependencies
     depends_on('elpa', when='+elpa+mpi')
     depends_on('libvdwxc+mpi', when='+libvdwxc+mpi')
     depends_on('parmetis+int64', when='+parmetis')
     depends_on('pfft', when='+pfft')
     # else:
-        #list all the serial dependencies
+    # list all the serial dependencies
     depends_on('libvdwxc~mpi', when='+libvdwxc~mpi')
     depends_on('metis@5:+int64', when='+metis')
 
@@ -91,37 +136,37 @@ class Octopus(AutotoolsPackage, CudaPackage):
         blas = self.spec['blas'].libs
         args = []
         args.extend([
-            '--prefix=%s' % prefix,
+            # '--prefix=%s' % prefix, # handled by autotools package base
             '--with-blas=%s' % blas.ld_flags,
             '--with-lapack=%s' % lapack.ld_flags,
-            '--with-gsl-prefix=%s' % spec['gsl'].prefix,
-            '--with-libxc-prefix=%s' % spec['libxc'].prefix,
+            '--with-gsl-prefix=%s' % self.spec['gsl'].prefix,
+            '--with-libxc-prefix=%s' % self.spec['libxc'].prefix,
             '--enable-openmp',
         ])
-        if '+mpi' in self.spec: # we build with MPI
+        if '+mpi' in self.spec:  # we build with MPI
             args.extend([
                 '--enable-mpi',
                 'CC=%s' % self.spec['mpi'].mpicc,
                 'FC=%s' % self.spec['mpi'].mpifc,
-                ])
+            ])
         else:
             args.extend([
-                '--disable-mpi', #check if this is needed
+                '--disable-mpi',  # check if this is needed
                 'CC=%s' % self.compiler.cc,
                 'FC=%s' % self.compiler.fc,
-                ])
+            ])
 
-        if '^fftw' in spec:
+        if '^fftw' in self.spec:
             args.append(
-                '--with-fftw-prefix=%s' % spec['fftw'].prefix
+                '--with-fftw-prefix=%s' % self.spec['fftw'].prefix
             )
-        elif '^mkl' in spec:
+        elif '^mkl' in self.spec:
             # As of version 10.0, Octopus depends on fftw-api instead
             # of FFTW. If FFTW is not in the dependency tree, then
             # it ought to be MKL as it is currently the only providers
             # available for fftw-api.
             args.append(
-                'FCFLAGS_FFTW=-I%s' % spec['mkl'].prefix.include.fftw
+                'FCFLAGS_FFTW=-I%s' % self.spec['mkl'].prefix.include.fftw
             )
         else:
             # To be foolproof, fail with a proper error message
@@ -129,82 +174,82 @@ class Octopus(AutotoolsPackage, CudaPackage):
             tty.die('Unsupported "fftw-api" provider, '
                     'currently only FFTW and MKL are supported.\n'
                     "Please report this issue on Spack's repository.")
-        if '+metis' in spec:
+        if '+metis' in self.spec:
             args.append(
-                '--with-metis-prefix=%s' % spec['metis'].prefix
+                '--with-metis-prefix=%s' % self.spec['metis'].prefix
             )
-        if '+parmetis' in spec:
+        if '+parmetis' in self.spec:
             args.append(
-                '--with-parmetis-prefix=%s' % spec['parmetis'].prefix
+                '--with-parmetis-prefix=%s' % self.spec['parmetis'].prefix
             )
-        if '+netcdf' in spec:
+        if '+netcdf' in self.spec:
             args.extend([
-                '--with-netcdf-prefix=%s' % spec['netcdf-fortran'].prefix,
+                '--with-netcdf-prefix=%s' % self.spec['netcdf-fortran'].prefix,
                 '--with-netcdf-include=%s' %
-                spec['netcdf-fortran'].prefix.include,
+                self.spec['netcdf-fortran'].prefix.include,
             ])
-        if '+arpack' in spec:
-            arpack_libs = spec['arpack-ng'].libs.joined()
+        if '+arpack' in self.spec:
+            arpack_libs = self.spec['cl-ng'].libs.joined()
             args.append(
                 '--with-arpack={0}'.format(arpack_libs),
             )
-            if '+mpi' in spec['arpack-ng']:
+            if '+mpi' in self.spec['arpack-ng']:
                 args.append(
                     '--with-parpack={0}'.format(arpack_libs)
                 )
 
-        if '+scalapack' in spec:
+        if '+scalapack' in self.spec:
             args.extend([
-                '--with-blacs=%s' % spec['scalapack'].libs,
-                '--with-scalapack=%s' % spec['scalapack'].libs
+                '--with-blacs=%s' % self.spec['scalapack'].libs,
+                '--with-scalapack=%s' % self.spec['scalapack'].libs
             ])
 
-        if '+cgal' in spec:
+        if '+cgal' in self.spec:
             args.append(
-                '--with-cgal-prefix=%s' % spec['cgal'].prefix
+                '--with-cgal-prefix=%s' % self.spec['cgal'].prefix
             )
 
-        if '+likwid' in spec:
+        if '+likwid' in self.spec:
             args.append(
-                '--with-likwid-prefix=%s' % spec['likwid'].prefix
+                '--with-likwid-prefix=%s' % self.spec['likwid'].prefix
             )
 
-        if '+pfft' in spec:
+        if '+pfft' in self.spec:
             args.append(
-                '--with-pfft-prefix=%s' % spec['pfft'].prefix,
+                '--with-pfft-prefix=%s' % self.spec['pfft'].prefix,
             )
 
-        # if '+poke' in spec:
+        # if '+poke' in self.spec:
         #     args.extend([
-        #         '--with-poke-prefix=%s' % spec['poke'].prefix,
+        #         '--with-poke-prefix=%s' % self.spec['poke'].prefix,
         #     ])
 
-        if '+libvdwxc' in spec:
+        if '+libvdwxc' in self.spec:
             args.append(
-                '--with-libvdwxc-prefix=%s' % spec['libvdwxc'].prefix
+                '--with-libvdwxc-prefix=%s' % self.spec['libvdwxc'].prefix
             )
 
-        if '+libyaml' in spec:
+        if '+libyaml' in self.spec:
             args.append(
-                '--with-libyaml-prefix=%s' % spec['libyaml'].prefix
+                '--with-libyaml-prefix=%s' % self.spec['libyaml'].prefix
             )
 
-        if '+elpa' in spec:
+        if '+elpa' in self.spec:
             args.append(
-                '--with-elpa-prefix=%s' % spec['elpa'].prefix
+                '--with-elpa-prefix=%s' % self.spec['elpa'].prefix
             )
 
-        if '+nlopt' in spec:
+        if '+nlopt' in self.spec:
             args.append(
-                '--with-nlopt-prefix=%s' % spec['nlopt'].prefix
+                '--with-nlopt-prefix=%s' % self.spec['nlopt'].prefix
             )
 
-        if '+cuda' in spec:
+        if '+cuda' in self.spec:
             args.append(
                 '--enable-cuda'
             )
 
-        if '+python' in spec:
+        if '+python' in self.spec:
             args.append('--enable-python')
 
         # --with-etsf-io-prefix=
@@ -219,16 +264,16 @@ class Octopus(AutotoolsPackage, CudaPackage):
         # let compiler know that the entire line is meaningful.
         # TODO: For the lack of better approach, assume that clang is mixed
         # with GNU fortran.
-        if (spec.satisfies('%apple-clang') or
-                spec.satisfies('%clang') or
-                spec.satisfies('%gcc')):
+        if (self.spec.satisfies('%apple-clang') or
+                self.spec.satisfies('%clang') or
+                self.spec.satisfies('%gcc')):
             # In case of GCC version 10, we will have errors because of
             # argument mismatching. Need to provide a flag to turn this into a
             # warning and build sucessfully
 
             fcflags = 'FCFLAGS=-O2 -ffree-line-length-none'
             fflags = 'FFLAGS=O2 -ffree-line-length-none'
-            if (spec.satisfies('%gcc@10:')):
+            if (self.spec.satisfies('%gcc@10:')):
                 gcc10_extra = '-fallow-argument-mismatch -fallow-invalid-boz'
                 args.append(fcflags + ' ' + gcc10_extra)
                 args.append(fflags + ' ' + gcc10_extra)
@@ -237,10 +282,6 @@ class Octopus(AutotoolsPackage, CudaPackage):
                 args.append(fflags)
 
         return args
-
-
-
-
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
