@@ -7,7 +7,7 @@
 import os
 import llnl.util.tty as tty
 from spack.package import *
-
+import llnl.util.filesystem as fs
 
 class Octopus(AutotoolsPackage, CudaPackage):
     """A real-space finite-difference (time-dependent) density-functional
@@ -343,7 +343,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
         purpose = "Run Octopus recipe example"
         with working_dir("example-recipe", create=True):
             print("Current working directory (in example-recipe)")
-            copy(join_path(os.path.dirname(__file__), "test", "recipe.inp"), "inp")
+            fs.copy(join_path(os.path.dirname(__file__), "test", "recipe.inp"), "inp")
             self.run_test(exe,
                           options=options,
                           expected=expected,
@@ -363,7 +363,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
         purpose = "Run tiny calculation for He"
         with working_dir("example-he", create=True):
             print("Current working directory (in example-he)")
-            copy(join_path(os.path.dirname(__file__), "test", "he.inp"), "inp")
+            fs.copy(join_path(os.path.dirname(__file__), "test", "he.inp"), "inp")
             self.run_test(exe,
                           options=options,
                           expected=expected,
