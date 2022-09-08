@@ -189,7 +189,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
                 self.spec['netcdf-fortran'].prefix.include,
             ])
         if '+arpack' in self.spec:
-            arpack_libs = self.spec['cl-ng'].libs.joined()
+            arpack_libs = self.spec['arpack-ng'].libs.joined()
             args.append(
                 '--with-arpack={0}'.format(arpack_libs),
             )
