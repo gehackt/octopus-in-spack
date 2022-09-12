@@ -86,6 +86,8 @@ class Octopus(AutotoolsPackage, CudaPackage):
             description='Compile with sparskit - A Basic Tool Kit for Sparse Matrix Computations')
     variant('berkeleygw', default=False,
             description='Compile with BerkeleyGW')
+    variant('libgd', default=False,
+            description='Compile with gdlib') # Used for a few tests
 
     # dependencies Picked from https://octopus-code.org/wiki/Manual:Installation and existing spack package
     depends_on("autoconf", type="build")
@@ -128,6 +130,8 @@ class Octopus(AutotoolsPackage, CudaPackage):
     depends_on('libyaml', when='+libyaml')
     depends_on('nlopt', when='+nlopt')
     depends_on('sparskit', when='+sparskit')
+    depends_on('libgd', when='+libgd')
+
     # if '+mpi' in spec:
     # list all the parallel dependencies
     depends_on('elpa', when='+elpa+mpi')
