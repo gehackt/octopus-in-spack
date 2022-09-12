@@ -99,8 +99,12 @@ class Octopus(AutotoolsPackage, CudaPackage):
     depends_on('libxc@5.1.0:', when='@10:')
     depends_on('libxc@5.1.0:', when='@develop')
 
-    depends_on('fftw@3:+mpi+openmp', when='@8:9')  # FFT library
-    depends_on('fftw-api@3:+mpi+openmp', when='@10:')
+    if '+mpi' in self.spec:
+        depends_on('fftw@3:+mpi+openmp', when='@8:9')  # FFT library
+        depends_on('fftw-api@3:+mpi+openmp', when='@10:')
+    else:
+        depends_on('fftw@3:+openmp~mpi', when='@8:9')  # FFT library
+        depends_on('fftw-api@3:+openmp~mpi', when='@10:')
 
     depends_on('blas')
     depends_on('gsl@1.9:')
