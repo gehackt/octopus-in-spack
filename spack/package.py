@@ -8,6 +8,8 @@ import os
 import llnl.util.tty as tty
 from spack.package import *
 import llnl.util.filesystem as fs
+import json
+
 
 class Octopus(AutotoolsPackage, CudaPackage):
     """A real-space finite-difference (time-dependent) density-functional
@@ -80,6 +82,8 @@ class Octopus(AutotoolsPackage, CudaPackage):
             description='Compile with nlopt')
     variant('debug', default=False,
             description='Compile with debug flags')
+    variant('sparskit', default=False,
+            description='Compile with sparskit - A Basic Tool Kit for Sparse Matrix Computations')
 
     # dependencies Picked from https://octopus-code.org/wiki/Manual:Installation and existing spack package
     depends_on("autoconf", type="build")
@@ -122,6 +126,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
     # list all the serial dependencies
     depends_on('libvdwxc~mpi', when='+libvdwxc~mpi')
     depends_on('metis@5:+int64', when='+metis')
+    depends_on('sparskit', when='+sparskit')
 
     # optional dependencies:
     # TODO: etsf-io, sparskit,
@@ -256,6 +261,11 @@ class Octopus(AutotoolsPackage, CudaPackage):
         # --with-sparskit=${prefix}/lib/libskit.a
         # --with-pfft-prefix=${prefix} --with-mpifftw-prefix=${prefix}
         # --with-berkeleygw-prefix=${prefix}
+        if '+sparskit' in self.spec:
+            args.append(
+                '--with-sparskit=%s' % os.path.join(
+                    self.spec['sparskit'].prefix.lib, 'libskit.a')
+            )
 
         # When preprocessor expands macros (i.e. CFLAGS) defined as quoted
         # strings the result may be > 132 chars and is terminated.
@@ -343,7 +353,8 @@ class Octopus(AutotoolsPackage, CudaPackage):
         purpose = "Run Octopus recipe example"
         with working_dir("example-recipe", create=True):
             print("Current working directory (in example-recipe)")
-            fs.copy(join_path(os.path.dirname(__file__), "test", "recipe.inp"), "inp")
+            fs.copy(join_path(os.path.dirname(__file__),
+                    "test", "recipe.inp"), "inp")
             self.run_test(exe,
                           options=options,
                           expected=expected,
