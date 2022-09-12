@@ -103,17 +103,28 @@ class Octopus(AutotoolsPackage, CudaPackage):
     depends_on('libxc@5.1.0:', when='@10:')
     depends_on('libxc@5.1.0:', when='@develop')
 
-    # if '+mpi' in spec:  # list all the parallel dependencies
-    depends_on('fftw@3:+mpi+openmp', when='@8:9+mpi')  # FFT library
-    depends_on('fftw-api@3:+mpi+openmp', when='@10:+mpi')
-    depends_on('libvdwxc+mpi', when='+libvdwxc+mpi')
-    depends_on('berkeleygw@2.1+mpi ', when='+berkeleygw+mpi')
+    # # if '+mpi' in spec:  # list all the parallel dependencies
+    # depends_on('fftw@3:+mpi+openmp', when='@8:9+mpi')  # FFT library
+    # depends_on('fftw-api@3:+mpi+openmp', when='@10:+mpi')
+    # depends_on('libvdwxc+mpi', when='+libvdwxc+mpi')
+    # depends_on('berkeleygw@2.1+mpi ', when='+berkeleygw+mpi')
 
-    # else:
-    depends_on('fftw@3:+openmp~mpi', when='@8:9~mpi')  # FFT library
-    depends_on('fftw-api@3:+openmp~mpi', when='@10:~mpi')
-    depends_on('libvdwxc~mpi', when='+libvdwxc~mpi')
-    depends_on('berkeleygw@2.1~mpi~scalapack ^hdf5~mpi ^fftw~mpi', when='+berkeleygw~mpi')
+    # # else:
+    # depends_on('fftw@3:+openmp~mpi', when='@8:9~mpi')  # FFT library
+    # depends_on('fftw-api@3:+openmp~mpi', when='@10:~mpi')
+    # depends_on('libvdwxc~mpi', when='+libvdwxc~mpi')
+    # depends_on('berkeleygw@2.1~mpi~scalapack ^hdf5~mpi ^fftw~mpi', when='+berkeleygw~mpi')
+    with when('+mpi'): # list all the parallel dependencies
+        depends_on('fftw@3:+mpi+openmp', when='@8:9')  # FFT library
+        depends_on('fftw-api@3:+mpi+openmp', when='@10:')
+        depends_on('libvdwxc+mpi', when='+libvdwxc')
+        depends_on('berkeleygw@2.1+mpi ', when='+berkeleygw')
+
+    with when('~mpi'): # list all the serial dependencies
+        depends_on('fftw@3:+openmp~mpi', when='@8:9')  # FFT library
+        depends_on('fftw-api@3:+openmp~mpi', when='@10:')
+        depends_on('libvdwxc~mpi', when='+libvdwxc')
+        depends_on('berkeleygw@2.1~mpi~scalapack ^hdf5~mpi ^fftw~mpi', when='+berkeleygw')
 
     depends_on('blas')
     depends_on('gsl@1.9:')
