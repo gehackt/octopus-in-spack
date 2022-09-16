@@ -8,6 +8,8 @@ import os
 import llnl.util.tty as tty
 from spack.package import *
 import llnl.util.filesystem as fs
+import json
+
 
 class Octopus(AutotoolsPackage, CudaPackage):
     """A real-space finite-difference (time-dependent) density-functional
@@ -80,6 +82,12 @@ class Octopus(AutotoolsPackage, CudaPackage):
             description='Compile with nlopt')
     variant('debug', default=False,
             description='Compile with debug flags')
+    variant('sparskit', default=False,
+            description='Compile with sparskit - A Basic Tool Kit for Sparse Matrix Computations')
+    variant('berkeleygw', default=False,
+            description='Compile with BerkeleyGW')
+    variant('libgd', default=False,
+            description='Compile with gdlib') # Used for a few tests
 
     # dependencies Picked from https://octopus-code.org/wiki/Manual:Installation and existing spack package
     depends_on("autoconf", type="build")
@@ -95,8 +103,28 @@ class Octopus(AutotoolsPackage, CudaPackage):
     depends_on('libxc@5.1.0:', when='@10:')
     depends_on('libxc@5.1.0:', when='@develop')
 
-    depends_on('fftw@3:+mpi+openmp', when='@8:9')  # FFT library
-    depends_on('fftw-api@3:+mpi+openmp', when='@10:')
+    # # if '+mpi' in spec:  # list all the parallel dependencies
+    # depends_on('fftw@3:+mpi+openmp', when='@8:9+mpi')  # FFT library
+    # depends_on('fftw-api@3:+mpi+openmp', when='@10:+mpi')
+    # depends_on('libvdwxc+mpi', when='+libvdwxc+mpi')
+    # depends_on('berkeleygw@2.1+mpi ', when='+berkeleygw+mpi')
+
+    # # else:
+    # depends_on('fftw@3:+openmp~mpi', when='@8:9~mpi')  # FFT library
+    # depends_on('fftw-api@3:+openmp~mpi', when='@10:~mpi')
+    # depends_on('libvdwxc~mpi', when='+libvdwxc~mpi')
+    # depends_on('berkeleygw@2.1~mpi~scalapack ^hdf5~mpi ^fftw~mpi', when='+berkeleygw~mpi')
+    with when('+mpi'): # list all the parallel dependencies
+        depends_on('fftw@3:+mpi+openmp', when='@8:9')  # FFT library
+        depends_on('fftw-api@3:+mpi+openmp', when='@10:')
+        depends_on('libvdwxc+mpi', when='+libvdwxc')
+        depends_on('berkeleygw@2.1+mpi ', when='+berkeleygw')
+
+    with when('~mpi'): # list all the serial dependencies
+        depends_on('fftw@3:+openmp~mpi', when='@8:9')  # FFT library
+        depends_on('fftw-api@3:+openmp~mpi', when='@10:')
+        depends_on('libvdwxc~mpi', when='+libvdwxc')
+        depends_on('berkeleygw@2.1~mpi~scalapack ^hdf5~mpi ^fftw~mpi', when='+berkeleygw')
 
     depends_on('blas')
     depends_on('gsl@1.9:')
@@ -112,16 +140,19 @@ class Octopus(AutotoolsPackage, CudaPackage):
     depends_on('libvdwxc', when='+libvdwxc')
     depends_on('libyaml', when='+libyaml')
     depends_on('nlopt', when='+nlopt')
+    depends_on('sparskit', when='+sparskit')
+    depends_on('libgd', when='+libgd')
+
     # if '+mpi' in spec:
     # list all the parallel dependencies
     depends_on('elpa', when='+elpa+mpi')
-    depends_on('libvdwxc+mpi', when='+libvdwxc+mpi')
     depends_on('parmetis+int64', when='+parmetis')
     depends_on('pfft', when='+pfft')
     # else:
     # list all the serial dependencies
-    depends_on('libvdwxc~mpi', when='+libvdwxc~mpi')
+    
     depends_on('metis@5:+int64', when='+metis')
+    
 
     # optional dependencies:
     # TODO: etsf-io, sparskit,
@@ -256,6 +287,15 @@ class Octopus(AutotoolsPackage, CudaPackage):
         # --with-sparskit=${prefix}/lib/libskit.a
         # --with-pfft-prefix=${prefix} --with-mpifftw-prefix=${prefix}
         # --with-berkeleygw-prefix=${prefix}
+        if '+sparskit' in self.spec:
+            args.append(
+                '--with-sparskit=%s' % os.path.join(
+                    self.spec['sparskit'].prefix.lib, 'libskit.a')
+            )
+        if '+berkeleygw' in self.spec:
+            args.append(
+                '--with-berkeleygw-prefix=%s' % self.spec['berkeleygw'].prefix
+            )
 
         # When preprocessor expands macros (i.e. CFLAGS) defined as quoted
         # strings the result may be > 132 chars and is terminated.
@@ -343,7 +383,8 @@ class Octopus(AutotoolsPackage, CudaPackage):
         purpose = "Run Octopus recipe example"
         with working_dir("example-recipe", create=True):
             print("Current working directory (in example-recipe)")
-            fs.copy(join_path(os.path.dirname(__file__), "test", "recipe.inp"), "inp")
+            fs.copy(join_path(os.path.dirname(__file__),
+                    "test", "recipe.inp"), "inp")
             self.run_test(exe,
                           options=options,
                           expected=expected,
